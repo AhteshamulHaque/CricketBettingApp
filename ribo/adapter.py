@@ -17,7 +17,8 @@ class ResponseAdapter:
    def __init__(self, pipe):
       self.pipe = pipe
 
-      # preserve the order get_command -> send result
+      # makes sure execution order get_command -> send result
+      # otherwise it may create deadlock
       self.buffered = False
 
    def get_command(self):

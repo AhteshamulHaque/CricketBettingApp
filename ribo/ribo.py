@@ -1,4 +1,6 @@
-from multiprocessing import Process, Pipe, Manager
+from multiprocessing import (
+   Process, Pipe, Manager, active_children, current_process
+)
 from network import NetworkProcess
 from scheduler import SchedulerProcess
 from adapter import RequestAdapter, ResponseAdapter
@@ -12,13 +14,13 @@ class Ribo:
       self.ps = Pipe() # connected to scheduler
       self.psn = Pipe() # network-scheduler connction pipe
 
-      # these pipe list will only be updated by scheduler,
-      # scheduler can maintains its own pipe list
-      self.ple = Manager().list() # enforcer pipe list connected to main
-      self.plen = Manager().list() # enforcer pipe list connected to network
+      # enforcer pipe list connected to network
+      # this pipe list will only be updated by scheduler
+      # scheduler can maintain its own pipe list
+      self.plen = Manager().list() 
 
       self.nproc = NetworkProcess(self.pn[1], self.psn[0], self.plen)
-      self.sproc = SchedulerProcess(self.ps[1], self.psn[1], self.ple, self.plen)
+      self.sproc = SchedulerProcess(self.ps[1], self.psn[1], self.plen)
 
       # adapter connected to network
       self.nadapter = RequestAdapter(self.pn[0])
@@ -32,7 +34,7 @@ class Ribo:
          try:
             self.nproc.start()
          except AssertionError:
-            self.nproc = NetworkProcess(self.pn[1], self.psn, self.ple)
+            self.nproc = NetworkProcess(self.pn[1], self.psn[0], self.plen)
             self.nproc.start()
 
 
@@ -44,16 +46,12 @@ class Ribo:
       self.nproc.terminate()
 
 
-   def get_scheduler_process(self):
-      return self.sproc
-
-
    def start_scheduler(self):
       if not self.sproc.is_alive():
          try:
             self.sproc.start()
          except AssertionError:
-            self.sproc = SchedulerProcess(self.ps[1], self.psn, self.ple)
+            self.sproc = SchedulerProcess(self.ps[1], self.psn[0], self.plen)
             self.sproc.start()
 
 
@@ -63,6 +61,10 @@ class Ribo:
 
    def stop_scheduler(self):
       self.sproc.terminate()
+
+
+   def get_active_children(self):
+      return active_children()
 
 
    def send_command_to_network(self, cmd):

@@ -6,12 +6,9 @@ class NetworkProcess(Process):
 
     def __init__(self, pm, ps, ple):
         super().__init__(name='network')
-        self.pm = pm
-        self.ps = ps
         self.ple = ple
-
-        self.madapter = ResponseAdapter(self.pm)
-        self.sadapter = ResponseAdapter(self.pm)
+        self.madapter = ResponseAdapter(pm)
+        self.sadapter = ResponseAdapter(ps)
 
     def run(self):
         while True:

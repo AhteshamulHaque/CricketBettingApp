@@ -4,14 +4,11 @@ import time, os
 
 class SchedulerProcess(Process):
 
-    def __init__(self, pm, pn, ple):
+    def __init__(self, pm, pn, plen):
         super().__init__(name='scheduler')
-        self.pm = pm
-        self.pn = pn
-        self.ple = ple
-
-        self.madapter = ResponseAdapter(self.pm)
-        self.nadapter = RequestAdapter(self.pn)
+        self.plen = plen # shared list scheduler - network for pipe
+        self.madapter = ResponseAdapter(pm)
+        self.nadapter = RequestAdapter(pn)
 
     def run(self):
         while True:
@@ -20,8 +17,3 @@ class SchedulerProcess(Process):
             mdata = self.madapter.get_command()
             if mdata:
                 self.madapter.send_result('Response to main from scheduler')
-
-            # poll for command from network
-            ndata = self.nadapter.get_command()
-            if ndata:
-                self.nadapter.send_result('Response to network from scheduler')
